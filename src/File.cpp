@@ -9,8 +9,7 @@ File::File(const std::string &m_path_to_file) : m_path_to_file {m_path_to_file}
         std::cerr << "Errror! No filename provided!" << std::endl;
         return;
     }
-
-    // Test, if there is no slash, i.e. file is found in the current directory.
+// Test, if there is no slash, i.e. file is found in the current directory.
     std::string::size_type pos = m_path_to_file.rfind("/");
     if (std::string::npos == pos)
     {
@@ -29,14 +28,18 @@ File::File(const std::string &m_path_to_file) : m_path_to_file {m_path_to_file}
         m_fileending = m_filename.substr(pos);
         m_filename   = m_filename.substr(0, pos);
     }
-
-    std::ifstream fileReader;
-    fileReader.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+}
+void File::GetContents(std::string &buffer)
+{
+    std::ifstream filereader;
+    filereader.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     try
     {
-        fileReader.open(m_path_to_file.c_str());
-        m_buffer << fileReader.rdbuf();
-        fileReader.close();
+        filereader.open(m_path_to_file.c_str());
+        std::stringstream ss;
+        ss << filereader.rdbuf();
+        filereader.close();
+        buffer = ss.str();
     }
     catch(const std::ifstream::failure& e)
     {
@@ -45,4 +48,5 @@ File::File(const std::string &m_path_to_file) : m_path_to_file {m_path_to_file}
                   <<  " not successfully read" << std::endl;
     }
 }
+
 
