@@ -7,14 +7,13 @@
 #include <vector>
 #include "Vec2.h"
 #include "Vec3.h"
-#define GLM_FORCE_CXX14
-#include <glm/glm.hpp>
 
+#include "../glm/glm/glm.hpp"
 
 class ObjFileParser
 {
     public:
-        explicit ObjFileParser(std::unique_ptr<File> &up_fileToParse) : m_upFileToParse(std::move(up_fileToParse)){};
+	explicit ObjFileParser(std::unique_ptr<File> &up_fileToParse) : m_upFileToParse(std::move(up_fileToParse)){};
         void Parse(void);
         void GetOpenGLData(std::vector<glm::vec3> &vertGL, std::vector<glm::vec2> &texGL, std::vector<glm::vec3> &normGL);
         

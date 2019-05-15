@@ -35,7 +35,22 @@ void ObjFileParser::Parse(void)
 
             normals.emplace_back(std::stof(tokens[1]), std::stof(tokens.at(2)), std::stof(tokens.at(3)));
         }
-    }
+        else if (tokens.at(0).compare("f") == 0 && tokens.size() == 4 )
+		{
+			for (int i = 1; i < 4; ++i)
+			{
+				std::vector<std::string> subTokens;
+				tokenize(tokens.at(i), '/', subTokens);
+
+				for (int j = 0; j < 3; ++j)
+				{
+					index_vert.push_back(std::stoi(subTokens[0]));
+					index_text.push_back(std::stoi(subTokens[1]));
+					index_norm.push_back(std::stoi(subTokens[2]));
+				}
+			}
+		}
+	}
 }
 
 
@@ -53,22 +68,23 @@ void ObjFileParser::tokenize(std::string &line, char delim, std::vector<std::str
     }
 }
 
-
 void ObjFileParser::GetOpenGLData(std::vector<glm::vec3> &vertGL, std::vector<glm::vec2> &texGL, std::vector<glm::vec3> &normGL)
 {
     for(size_t i = 0; i < vertices.size(); ++i)
     {
-        vertGL.push_back(glm::vec3(vertices[i].x, vertices[i].y, vertices[i].z));
+        vertGL.push_back(glm::vec3(vertices[index_vert[i]].x, vertices[index_vert[i]].y, vertices[index_vert[i]].z));
     }
 
     for(size_t i = 0; i < texels.size(); ++i)
     {
-        texGL.push_back(glm::vec2(texels[i].x, texels[i].y));
+        texGL.push_back(glm::vec2(texels[index_text[i]].x, texels[index_text[i]].y));
     }
 
     for(size_t i = 0; i < normals.size(); ++i)
     {
-        normGL.push_back(glm::vec3(normals[i].x, normals[i].y, normals[i].z));
+        normGL.push_back(glm::vec3(normals[index_norm[i]].x, normals[index_norm[i]].y, normals[index_norm[i]].z));
     }
 
 }
+
+
