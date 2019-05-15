@@ -23,7 +23,7 @@ void ObjFileParser::Parse(void)
         if(tokens.at(0).compare("v") == 0 && tokens.size() == 4)
         {
             //Vertex
-            vertices.emplace_back(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
+            vertices.emplace_back(std::stof(tokens[1])*0.5f, std::stof(tokens[2])*0.5f, std::stof(tokens[3])*0.5);
         }
         else if (tokens.at(0).compare("vt") == 0 && tokens.size() == 3)
         {
@@ -42,12 +42,9 @@ void ObjFileParser::Parse(void)
 				std::vector<std::string> subTokens;
 				tokenize(tokens.at(i), '/', subTokens);
 
-				for (int j = 0; j < 3; ++j)
-				{
-					index_vert.push_back(std::stoi(subTokens[0]));
-					index_text.push_back(std::stoi(subTokens[1]));
-					index_norm.push_back(std::stoi(subTokens[2]));
-				}
+                index_vert.push_back(std::stoi(subTokens[0]));
+                index_text.push_back(std::stoi(subTokens[1]));
+                index_norm.push_back(std::stoi(subTokens[2]));
 			}
 		}
 	}
@@ -68,22 +65,24 @@ void ObjFileParser::tokenize(std::string &line, char delim, std::vector<std::str
     }
 }
 
-void ObjFileParser::GetOpenGLData(std::vector<glm::vec3> &vertGL, std::vector<glm::vec2> &texGL, std::vector<glm::vec3> &normGL)
+void ObjFileParser::GetVerticesOpenGL(std::vector<glm::vec3> &vertGL, std::vector<int> &indices)
 {
-    for(size_t i = 0; i < vertices.size(); ++i)
+    for(size_t i = 0; i < index_vert.size(); ++i)
     {
-        vertGL.push_back(glm::vec3(vertices[index_vert[i]].x, vertices[index_vert[i]].y, vertices[index_vert[i]].z));
+        vertGL.push_back(glm::vec3(vertices[index_vert[i] - 1].x, vertices[index_vert[i] - 1].y, vertices[index_vert[i] - 1].z));
     }
 
-    for(size_t i = 0; i < texels.size(); ++i)
-    {
-        texGL.push_back(glm::vec2(texels[index_text[i]].x, texels[index_text[i]].y));
-    }
+    indices = index_vert;
 
-    for(size_t i = 0; i < normals.size(); ++i)
-    {
-        normGL.push_back(glm::vec3(normals[index_norm[i]].x, normals[index_norm[i]].y, normals[index_norm[i]].z));
-    }
+    // for(size_t i = 0; i < texels.size(); ++i)
+    // {
+    //     texGL.push_back(glm::vec2(texels[index_text[i]].x, texels[index_text[i]].y));
+    // }
+
+    // for(size_t i = 0; i < normals.size(); ++i)
+    // {
+    //     normGL.push_back(glm::vec3(normals[index_norm[i]].x, normals[index_norm[i]].y, normals[index_norm[i]].z));
+    // }
 
 }
 
