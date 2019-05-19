@@ -148,14 +148,12 @@ int main()
         // camera/view transformation
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         lightingShader.setMat4("view", view);
-
         glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         lightingShader.setMat4("model", model);
 
         // render container
         glBindVertexArray(monkeyVAO);
-        glDrawArrays(GL_TRIANGLES, 0, vMonkey.size());
-
+        glDrawArrays(GL_TRIANGLES, 0, vMonkey.size() / 2);
 
         // draw the lamp
         lampShader.use();
@@ -170,6 +168,10 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, vLight.size());
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
+
+        glBindVertexArray(0);
+        glUseProgram(0);
+    
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

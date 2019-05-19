@@ -23,7 +23,7 @@ void ObjFileParser::Parse(void)
         if(tokens.at(0).compare("v") == 0 && tokens.size() == 4)
         {
             //Vertex
-            vertices.emplace_back(std::stof(tokens[1])*0.5f, std::stof(tokens[2])*0.5f, std::stof(tokens[3])*0.5);
+            vertices.emplace_back(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
         }
         else if (tokens.at(0).compare("vt") == 0 && tokens.size() == 3)
         {
