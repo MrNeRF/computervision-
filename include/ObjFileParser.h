@@ -13,7 +13,7 @@
 class ObjFileParser
 {
     public:
-	explicit ObjFileParser(std::unique_ptr<File> &up_fileToParse) : m_upFileToParse(std::move(up_fileToParse)){};
+	explicit ObjFileParser(std::unique_ptr<File> up_fileToParse) : m_upFileToParse(std::move(up_fileToParse)){};
         void Parse(void);
         void GetVerticesOpenGL(std::vector<glm::vec3> &vertGL, std::vector<int> &indices);
         
@@ -32,6 +32,8 @@ class ObjFileParser
 	   std::vector<int> index_vert;
 	   std::vector<int> index_text;
 	   std::vector<int> index_norm;
+
+       bool hasNormals = false;
 };
 
 #endif

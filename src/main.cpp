@@ -50,7 +50,7 @@ int main()
 
     // Open a window and create its OpenGL context
     GLFWwindow* window; // (In the accompanying source code, this variable is global for simplicity)
-    window = glfwCreateWindow( 1024, 768, "Tutorial 01", NULL, NULL);
+    window = glfwCreateWindow( 1024, 768, "Rendering with OpenGL", NULL, NULL);
 
     if( window == NULL )
     {
@@ -67,6 +67,8 @@ int main()
         std::cerr <<  "Failed to initialize GLEW\n";
         return -1;
     }
+    glEnable(GL_DEPTH_TEST);  
+
     // get version info
     const GLubyte* renderer = glGetString(GL_RENDERER); // get renderer string
     const GLubyte* version = glGetString(GL_VERSION); // version as a string
@@ -75,37 +77,43 @@ int main()
 
     Shader lightingShader("../shader/color.vs", "../shader/color.fs");
     Shader lampShader("../shader/lamp.vs", "../shader/lamp.fs");
-    std::vector<glm::vec3> vertices;
-    std::vector<int> indices;
+    std::vector<glm::vec3> vMonkey;
+    std::vector<int> ivMonkey;
 
-    std::unique_ptr<File> file = std::make_unique<File>("../models/suzanne.obj");
-    ObjFileParser parser(file);
-    parser.Parse();
-    parser.GetVerticesOpenGL(vertices, indices);
+    ObjFileParser parseMonkey(std::make_unique<File>("../models/suzanne.obj"));
+    parseMonkey.Parse();
+    parseMonkey.GetVerticesOpenGL(vMonkey,ivMonkey);
 
-    for (size_t i = 0; i < vertices.size(); ++i)
-    {
-        std::cout << vertices[i].x << " "<< vertices[i].y << " "<< vertices[i].z << std::endl;
-    }
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    unsigned int monkeyVBO, monkeyVAO;
+    glGenVertexArrays(1, &monkeyVAO);
+    glGenBuffers(1, &monkeyVBO);
 
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+    glBindVertexArray(monkeyVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, monkeyVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vMonkey.size(), &vMonkey[0], GL_STATIC_DRAW);
 
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+    // position attributes
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3), (void*)0);
     glEnableVertexAttribArray(0);
-
+    // normal attributes
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3), (void*)(sizeof(glm::vec3)));
+    glEnableVertexAttribArray(1);
 
     // light
-    unsigned int lightVAO;
+    std::vector<glm::vec3> vLight;
+    std::vector<int> iLight;
+    ObjFileParser parseCube(std::make_unique<File>("../models/quader.obj"));
+    parseCube.Parse();
+    parseCube.GetVerticesOpenGL(vLight, iLight);
+
+    unsigned int lightVAO, lightVBO;
     glGenVertexArrays(1, &lightVAO);
+    glGenBuffers(1, &lightVBO);
+
     glBindVertexArray(lightVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vLight.size(), &vLight[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3) ,(void*)0);
     glEnableVertexAttribArray(0);
     // -------------------------------------------------------------------------------------------
     lightingShader.use(); // don't forget to activate/use the shader before setting uniforms!
@@ -135,6 +143,7 @@ int main()
         lightingShader.use();
         lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
         lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+        lightingShader.setVec3("lightPos", lightPos);
 
         // camera/view transformation
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
@@ -144,8 +153,8 @@ int main()
         lightingShader.setMat4("model", model);
 
         // render container
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+        glBindVertexArray(monkeyVAO);
+        glDrawArrays(GL_TRIANGLES, 0, vMonkey.size());
 
 
         // draw the lamp
@@ -156,8 +165,9 @@ int main()
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
         lampShader.setMat4("model", model);
+
         glBindVertexArray(lightVAO);
-        glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+        glDrawArrays(GL_TRIANGLES, 0, vLight.size());
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -166,8 +176,11 @@ int main()
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &monkeyVAO);
+    glDeleteBuffers(1, &monkeyVBO);
+
+    glDeleteVertexArrays(1, &lightVAO);
+    glDeleteBuffers(1, &lightVBO);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------

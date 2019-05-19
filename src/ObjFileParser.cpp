@@ -32,7 +32,7 @@ void ObjFileParser::Parse(void)
         }
         else if (tokens.at(0).compare("vn") == 0 && tokens.size() == 4)
         {
-
+            hasNormals = true;
             normals.emplace_back(std::stof(tokens[1]), std::stof(tokens.at(2)), std::stof(tokens.at(3)));
         }
         else if (tokens.at(0).compare("f") == 0 && tokens.size() == 4 )
@@ -70,6 +70,11 @@ void ObjFileParser::GetVerticesOpenGL(std::vector<glm::vec3> &vertGL, std::vecto
     for(size_t i = 0; i < index_vert.size(); ++i)
     {
         vertGL.push_back(glm::vec3(vertices[index_vert[i] - 1].x, vertices[index_vert[i] - 1].y, vertices[index_vert[i] - 1].z));
+
+        if(hasNormals)
+        {
+            vertGL.push_back(glm::vec3(normals[index_norm[i] - 1].x, normals[index_norm[i] - 1].y, normals[index_norm[i] - 1].z));
+        }
     }
 
     indices = index_vert;
@@ -78,12 +83,6 @@ void ObjFileParser::GetVerticesOpenGL(std::vector<glm::vec3> &vertGL, std::vecto
     // {
     //     texGL.push_back(glm::vec2(texels[index_text[i]].x, texels[index_text[i]].y));
     // }
-
-    // for(size_t i = 0; i < normals.size(); ++i)
-    // {
-    //     normGL.push_back(glm::vec3(normals[index_norm[i]].x, normals[index_norm[i]].y, normals[index_norm[i]].z));
-    // }
-
 }
 
 
