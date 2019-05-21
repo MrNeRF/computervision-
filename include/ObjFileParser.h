@@ -8,7 +8,8 @@
 #include "Vec2.h"
 #include "Vec3.h"
 
-#include <glm/glm.hpp> 
+#define GLM_FORCE_CXX14
+#include <glm/glm.hpp>
 
 class ObjFileParser
 {

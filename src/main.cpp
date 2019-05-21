@@ -9,6 +9,7 @@
 
 #include "File.h"
 #include "ObjFileParser.h"
+#include "Camera.h"
 // #define before glm includes activate c++14 language features
 #define GLM_FORCE_CXX14
 #include <glm/glm.hpp>
@@ -122,6 +123,7 @@ int main()
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     lightingShader.setMat4("projection", projection);
 
+    Camera cam;
 
     // render loop
     // -----------
@@ -133,8 +135,10 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        processInput(window);
+        // cam.ProcessInput(window, deltaTime);
 
+        processInput(window);
+        cam.ProcessInput(window, 0.001);
         // render
         // ------
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -146,7 +150,8 @@ int main()
         lightingShader.setVec3("lightPos", lightPos);
 
         // camera/view transformation
-        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+         glm::mat4 view = cam.GetViewMatrix();
+        // glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         lightingShader.setMat4("view", view);
         glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         lightingShader.setMat4("model", model);
@@ -158,7 +163,7 @@ int main()
         // draw the lamp
         lampShader.use();
         lampShader.setMat4("projection", projection);
-        lampShader.setMat4("view", view);
+        lampShader.setMat4("view",view);
         model = glm::mat4(1.0f);
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
@@ -187,7 +192,8 @@ int main()
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
-    return 0;}
+    return 0;
+}
 
 void processInput(GLFWwindow *window)
 {
@@ -204,6 +210,9 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 }
+ 
+
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
