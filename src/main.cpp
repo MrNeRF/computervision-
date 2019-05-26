@@ -138,7 +138,7 @@ int main()
         // cam.ProcessInput(window, deltaTime);
 
         processInput(window);
-        cam.ProcessInput(window, 0.001);
+        cam.ProcessInput(window, deltaTime);
         // render
         // ------
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
