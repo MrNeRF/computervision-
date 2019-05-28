@@ -32,6 +32,7 @@ void ObjFileParser::Parse(void)
         }
         else if (tokens.at(0).compare("vn") == 0 && tokens.size() == 4)
         {
+            // normals
             hasNormals = true;
             normals.emplace_back(std::stof(tokens[1]), std::stof(tokens.at(2)), std::stof(tokens.at(3)));
         }
