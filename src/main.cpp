@@ -78,6 +78,7 @@ int main()
 
     Shader lightingShader("../shader/color.vs", "../shader/color.fs");
     Shader lampShader("../shader/lamp.vs", "../shader/lamp.fs");
+    Shader normalShader("../shader/normals.vs", "../shader/normals.fs", "../shader/normals.gs");
     std::vector<glm::vec3> vMonkey;
     std::vector<int> ivMonkey;
 
@@ -135,8 +136,6 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        // cam.ProcessInput(window, deltaTime);
-
         processInput(window);
         cam.ProcessInput(window, deltaTime);
         // render
@@ -150,16 +149,24 @@ int main()
         lightingShader.setVec3("lightPos", lightPos);
 
         // camera/view transformation
-         glm::mat4 view = cam.GetViewMatrix();
-        // glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        glm::mat4 view = cam.GetViewMatrix();
         lightingShader.setMat4("view", view);
         glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         lightingShader.setMat4("model", model);
 
-        // render container
+        // render Object 
         glBindVertexArray(monkeyVAO);
         glDrawArrays(GL_TRIANGLES, 0, vMonkey.size() / 2);
 
+        // Draw Normals
+        normalShader.use();
+        normalShader.setMat4("view", view);
+        normalShader.setMat4("model", model);
+        normalShader.setMat4("projection", projection);
+
+        glBindVertexArray(monkeyVAO);
+        glDrawArrays(GL_TRIANGLES, 0, vMonkey.size() / 2);
+        
         // draw the lamp
         lampShader.use();
         lampShader.setMat4("projection", projection);
@@ -171,8 +178,6 @@ int main()
 
         glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, vLight.size());
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
 
         glBindVertexArray(0);
         glUseProgram(0);
