@@ -1,15 +1,18 @@
 #include "ObjFileParser.h"
 #include <fstream>
-#include <iterator>
 #include <algorithm>
-#include <vector>
-#include <map>
 
 
-void ObjFileParser::Parse(void)
+void ObjFileParser::Parse(std::vector<glm::vec3> *vertices,
+                        std::vector<glm::vec2> *texels, 
+                        std::vector<glm::vec3> *normals,
+                        std::vector<int> *idxVertices,
+                        std::vector<int> *idxTexels,
+                        std::vector<int> *idxNormals)
+
 {
     std::string buffer;
-    m_upFileToParse->GetContents(buffer);
+    upFileToParse->GetContents(buffer);
 
     std::istringstream iss(buffer);
 
@@ -23,18 +26,16 @@ void ObjFileParser::Parse(void)
         if(tokens.at(0).compare("v") == 0 && tokens.size() == 4)
         {
             //Vertex
-            vertices.emplace_back(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
+            vertices->emplace_back(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
         }
         else if (tokens.at(0).compare("vt") == 0 && tokens.size() == 3)
         {
             // texture coordinates
-            texels.emplace_back(std::stof(tokens[1]), std::stof(tokens[2]));
+            texels->emplace_back(std::stof(tokens[1]), std::stof(tokens[2]));
         }
         else if (tokens.at(0).compare("vn") == 0 && tokens.size() == 4)
         {
-            // normals
-            hasNormals = true;
-            normals.emplace_back(std::stof(tokens[1]), std::stof(tokens.at(2)), std::stof(tokens.at(3)));
+            normals->emplace_back(std::stof(tokens[1]), std::stof(tokens.at(2)), std::stof(tokens.at(3)));
         }
         else if (tokens.at(0).compare("f") == 0 && tokens.size() == 4 )
 		{
@@ -43,9 +44,10 @@ void ObjFileParser::Parse(void)
 				std::vector<std::string> subTokens;
 				tokenize(tokens.at(i), '/', subTokens);
 
-                index_vert.push_back(std::stoi(subTokens[0]));
-                index_text.push_back(std::stoi(subTokens[1]));
-                index_norm.push_back(std::stoi(subTokens[2]));
+                // Indices start at 1 that is why we have to subtract 1
+                idxVertices->push_back(std::stoi(subTokens[0]) - 1);
+                idxTexels->push_back(std::stoi(subTokens[1]) - 1);
+                idxNormals->push_back(std::stoi(subTokens[2]) - 1);
 			}
 		}
 	}
@@ -64,26 +66,6 @@ void ObjFileParser::tokenize(std::string &line, char delim, std::vector<std::str
         tokens.push_back(std::string(start, finish));
         start = finish;
     }
-}
-
-void ObjFileParser::GetVerticesOpenGL(std::vector<glm::vec3> &vertGL, std::vector<int> &indices)
-{
-    for(size_t i = 0; i < index_vert.size(); ++i)
-    {
-        vertGL.push_back(glm::vec3(vertices[index_vert[i] - 1].x, vertices[index_vert[i] - 1].y, vertices[index_vert[i] - 1].z));
-
-        if(hasNormals)
-        {
-            vertGL.push_back(glm::vec3(normals[index_norm[i] - 1].x, normals[index_norm[i] - 1].y, normals[index_norm[i] - 1].z));
-        }
-    }
-
-    indices = index_vert;
-
-    // for(size_t i = 0; i < texels.size(); ++i)
-    // {
-    //     texGL.push_back(glm::vec2(texels[index_text[i]].x, texels[index_text[i]].y));
-    // }
 }
 
 

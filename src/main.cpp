@@ -10,6 +10,7 @@
 #include "File.h"
 #include "ObjFileParser.h"
 #include "Camera.h"
+#include "Mesh.h"
 // #define before glm includes activate c++14 language features
 #define GLM_FORCE_CXX14
 #include <glm/glm.hpp>
@@ -17,17 +18,10 @@
 #include <glm/gtc/type_ptr.hpp>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-
-
-// camera
-glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
@@ -79,48 +73,12 @@ int main()
     Shader lightingShader("../shader/color.vs", "../shader/color.fs");
     Shader lampShader("../shader/lamp.vs", "../shader/lamp.fs");
     Shader normalShader("../shader/normals.vs", "../shader/normals.fs", "../shader/normals.gs");
-    std::vector<glm::vec3> vMonkey;
-    std::vector<int> ivMonkey;
 
-    ObjFileParser parseMonkey(std::make_unique<File>("../models/suzanne.obj"));
-    parseMonkey.Parse();
-    parseMonkey.GetVerticesOpenGL(vMonkey,ivMonkey);
+    Mesh monkey("../models/suzanne.obj");
 
-    unsigned int monkeyVBO, monkeyVAO;
-    glGenVertexArrays(1, &monkeyVAO);
-    glGenBuffers(1, &monkeyVBO);
-
-    glBindVertexArray(monkeyVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, monkeyVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vMonkey.size(), &vMonkey[0], GL_STATIC_DRAW);
-
-    // position attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3), (void*)0);
-    glEnableVertexAttribArray(0);
-    // normal attributes
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3), (void*)(sizeof(glm::vec3)));
-    glEnableVertexAttribArray(1);
-
-    // light
-    std::vector<glm::vec3> vLight;
-    std::vector<int> iLight;
-    ObjFileParser parseCube(std::make_unique<File>("../models/quader.obj"));
-    parseCube.Parse();
-    parseCube.GetVerticesOpenGL(vLight, iLight);
-
-    unsigned int lightVAO, lightVBO;
-    glGenVertexArrays(1, &lightVAO);
-    glGenBuffers(1, &lightVBO);
-
-    glBindVertexArray(lightVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vLight.size(), &vLight[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3) ,(void*)0);
-    glEnableVertexAttribArray(0);
+    Mesh light("../models/quader.obj");
     // -------------------------------------------------------------------------------------------
-    lightingShader.use(); // don't forget to activate/use the shader before setting uniforms!
-   // pass projection matrix to shader (as projection matrix rarely changes there's no need to do this per frame)
-    // -----------------------------------------------------------------------------------------------------------
+    lightingShader.use(); 
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     lightingShader.setMat4("projection", projection);
 
@@ -136,7 +94,6 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        processInput(window);
         cam.ProcessInput(window, deltaTime);
         // render
         // ------
@@ -155,8 +112,8 @@ int main()
         lightingShader.setMat4("model", model);
 
         // render Object 
-        glBindVertexArray(monkeyVAO);
-        glDrawArrays(GL_TRIANGLES, 0, vMonkey.size() / 2);
+        monkey.Render();
+        glUseProgram(0);
 
         // Draw Normals
         normalShader.use();
@@ -164,60 +121,29 @@ int main()
         normalShader.setMat4("model", model);
         normalShader.setMat4("projection", projection);
 
-        glBindVertexArray(monkeyVAO);
-        glDrawArrays(GL_TRIANGLES, 0, vMonkey.size() / 2);
+        monkey.Render();
         
         // draw the lamp
         lampShader.use();
-        lampShader.setMat4("projection", projection);
         lampShader.setMat4("view",view);
         model = glm::mat4(1.0f);
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
         lampShader.setMat4("model", model);
+        lampShader.setMat4("projection", projection);
 
-        glBindVertexArray(lightVAO);
-        glDrawArrays(GL_TRIANGLES, 0, vLight.size());
-
-        glBindVertexArray(0);
+        light.Render();
         glUseProgram(0);
-    
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    // optional: de-allocate all resources once they've outlived their purpose:
-    // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &monkeyVAO);
-    glDeleteBuffers(1, &monkeyVBO);
-
-    glDeleteVertexArrays(1, &lightVAO);
-    glDeleteBuffers(1, &lightVBO);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
 }
-
-void processInput(GLFWwindow *window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    float cameraSpeed = 2.5 * deltaTime; 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-}
- 
-
-
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
